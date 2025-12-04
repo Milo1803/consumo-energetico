@@ -1,0 +1,164 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow-lg border-0">
+        <div class="card-body">
+
+            <h2 class="text-center mb-4 fw-bold text-primary">🔍 Calcular Consumo por Usuario</h2>
+
+            <!-- FORMULARIO -->
+            <form method="POST" class="row g-3 justify-content-center">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Seleccionar usuario:</label>
+                    <select name="id_usuario" class="form-select border-primary" required>
+                        <option value="">Selecciona...</option>
+                        {% for u in usuarios %}
+                            <option value="{{ u[0] }}">{{ u[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        Calcular 🔎
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if resultados %}
+
+    <!-- RESULTADOS -->
+    <div class="card shadow mt-4 border-0">
+        <div class="card-body">
+
+            <h3 class="text-center text-success mb-3 fw-bold">
+                Resultados para {{ resultados.usuario }}
+            </h3>
+
+            <!-- TABLA DE RESULTADOS -->
+            <div class="table-responsive">
+                <table class="table table-dark table-striped table-hover align-middle">
+
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Electrodoméstico</th>
+                            <th>Potencia (W)</th>
+                            <th>Horas</th>
+                            <th>kWh Día</th>
+                            <th>kWh Mes</th>
+                            <th>Costo Día</th>
+                            <th>Costo Mes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in resultados.aparatos %}
+                        <tr>
+                            <td>{{ a.nombre }}</td>
+                            <td>{{ a.potencia }}</td>
+                            <td>{{ a.horas }}</td>
+                            <td>{{ a.consumo_dia }}</td>
+                            <td>{{ a.consumo_mes }}</td>
+                            <td>${{ a.costo_dia }}</td>
+                            <td>${{ a.costo_mes }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TOTALES -->
+            <div class="alert alert-info mt-4">
+                <h5 class="fw-bold">📌 Totales</h5>
+                <p><b>Consumo total por día:</b> {{ resultados.consumo_total_dia }} kWh</p>
+                <p><b>Consumo total por mes:</b> {{ resultados.consumo_total_mes }} kWh</p>
+                <p><b>Costo diario:</b> ${{ resultados.costo_total_dia }}</p>
+                <p><b>Costo mensual:</b> ${{ resultados.costo_total_mes }}</p>
+                <p><b>Precio kWh aplicado:</b> <span class="badge bg-success">{{ resultados.valor_kwh }} COP</span></p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- GRAFICOS -->
+    <div class="card shadow-lg mt-4 border-0">
+        <div class="card-body">
+
+            <h3 class="text-center mb-4 fw-bold">📊 Gráficos del Consumo</h3>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-center">Consumo Mensual (kWh)</h5>
+                    <canvas id="graficoConsumo" height="200"></canvas>
+                </div>
+
+                <div class="col-md-6">
+                    <h5 class="text-center">Costo Mensual (COP)</h5>
+                    <canvas id="graficoCosto" height="200"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="/" class="btn btn-outline-primary btn-lg px-4">⬅ Volver al menú</a>
+    </div>
+
+</div>
+
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    {% if resultados %}
+    // SweetAlert notificación
+    Swal.fire({
+        title: "✔ Cálculo exitoso",
+        text: "Se generó el consumo del usuario correctamente",
+        icon: "success",
+        confirmButtonColor: "#3085d6"
+    });
+
+    // Datos enviados desde Flask
+    const labels = {{ resultados.labels | safe }};
+    const consumoMes = {{ resultados.valores_kwh_mes | safe }};
+    const costoMes = {{ resultados.valores_costo_mes | safe }};
+
+    /* GRAFICO CONSUMO */
+    new Chart(document.getElementById("graficoConsumo"), {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "kWh por mes",
+                data: consumoMes,
+                borderWidth: 2
+            }]
+        }
+    });
+
+    /* GRAFICO COSTO */
+    new Chart(document.getElementById("graficoCosto"), {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Costo mensual (COP)",
+                data: costoMes,
+                tension: 0.4,
+                borderWidth: 3
+            }]
+        }
+    });
+    {% endif %}
+</script>
+
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <!-- TITULO PRINCIPAL -->
+    <div class="card shadow-lg border-0 mb-4">
+        <div class="card-body text-center">
+
+            <h2 class="fw-bold" style="color:#4da3ff;">⚡ Consumo Energético Total</h2>
+
+            {% if usuario %}
+            <h4 class="mt-2" style="color:#7dfc82;">
+                Usuario: <span class="fw-bold">{{ usuario }}</span>
+            </h4>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- TABLA DE APARATOS -->
+    <div class="card shadow border-0">
+        <div class="card-body">
+
+            <h4 class="fw-bold mb-3" style="color:#4da3ff;">🔌 Aparatos registrados</h4>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-striped table-hover align-middle">
+
+                    <thead>
+                        <tr>
+                            <th style="color:#fff;">Aparato</th>
+                            <th style="color:#fff;">Potencia (W)</th>
+                            <th style="color:#fff;">Horas de uso</th>
+                            <th style="color:#fff;">Tipo de tarifa</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for aparato in datos %}
+                        <tr>
+                            <td>{{ aparato[0] }}</td>
+                            <td>{{ aparato[1] }}</td>
+                            <td>{{ aparato[2] }}</td>
+                            <td>{{ aparato[3] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div class="card shadow mt-4 border-0">
+        <div class="card-body">
+
+            <h4 class="fw-bold mb-3" style="color:#4da3ff;">📊 Resultados del cálculo</h4>
+
+            <p class="fs-5">
+                <strong style="color:#fff;">Valor kWh:</strong>
+                <span class="badge bg-primary fs-6 px-3 py-2">{{ valor_kwh }} COP</span>
+            </p>
+
+            <p class="fs-5">
+                <strong style="color:#fff;">Consumo total:</strong>
+                <span class="badge bg-info fs-6 px-3 py-2">{{ consumo_total }} kWh</span>
+            </p>
+
+            <p class="fs-5">
+                <strong style="color:#fff;">Costo total:</strong>
+                <span class="badge bg-success fs-6 px-3 py-2">{{ costo }} COP</span>
+            </p>
+
+        </div>
+    </div>
+
+    <!-- BOTÓN VOLVER -->
+    <div class="text-center mt-4 mb-4">
+        <a href="/" class="btn btn-primary btn-lg px-4" style="border-radius:10px;">
+            ⬅ Volver al menú
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

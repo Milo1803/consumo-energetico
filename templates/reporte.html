@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+{% extends "layout.html" %}
+{% block content %}
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte Mensual</title>
+</head>
+<body>
+
+<h1>Reporte Mensual por Usuario</h1>
+
+<form method="POST">
+    <label>Selecciona un usuario:</label>
+    <select name="id_usuario" required>
+        <option value="">Seleccione...</option>
+        {% for u in usuarios %}
+        <option value="{{ u[0] }}">{{ u[1] }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Generar Reporte</button>
+</form>
+
+<hr>
+
+{% if datos %}
+<h2>Reporte para: {{ datos.usuario }}</h2>
+<p>Tarifa actual: {{ datos.valor_kwh }} COP / kWh</p>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Aparato</th>
+        <th>Potencia (W)</th>
+        <th>Horas/día</th>
+        <th>Consumo mensual (kWh)</th>
+        <th>Costo mensual (COP)</th>
+    </tr>
+
+    {% for a in datos.aparatos %}
+    <tr>
+        <td>{{ a.nombre }}</td>
+        <td>{{ a.potencia }}</td>
+        <td>{{ a.horas }}</td>
+        <td>{{ a.consumo }}</td>
+        <td>{{ a.costo }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<hr>
+<h3>Total Consumo: {{ datos.consumo_total }} kWh / mes</h3>
+<h3>Total a Pagar: {{ datos.costo_total }} COP</h3>
+
+{% endif %}
+
+<div class="d-flex justify-content-center mt-4">
+    <a href="/" class="btn btn-lg btn-outline-primary px-4">⬅ Volver al menú</a>
+</div>
+
+
+</body>
+</html>
+{% endblock %}

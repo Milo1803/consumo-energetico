@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+{% extends "layout.html" %}
+{% block content %}
+
+<h1>Historial de Consumo Mensual</h1>
+
+<form method="POST">
+    <label>Seleccionar usuario:</label>
+    <select name="id_usuario" required>
+        <option value="">Selecciona</option>
+        {% for u in usuarios %}
+            <option value="{{ u[0] }}">{{ u[1] }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Ver Historial</button>
+</form>
+
+<hr>
+
+{% if datos %}
+<h2>Historial de {{ datos.usuario }}</h2>
+
+{% for mes, info in datos.meses.items() %}
+    <h3>Mes: {{ mes }}</h3>
+
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Aparato</th>
+            <th>Horas Uso</th>
+            <th>Consumo (kWh)</th>
+            <th>Costo (COP)</th>
+        </tr>
+
+        {% for a in info.aparatos %}
+        <tr>
+            <td>{{ a.aparato }}</td>
+            <td>{{ a.horas }}</td>
+            <td>{{ a.consumo }}</td>
+            <td>${{ a.costo }}</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+    <p><b>Total Consumo:</b> {{ info.total_consumo }} kWh</p>
+    <p><b>Total Costo:</b> ${{ info.total_costo }}</p>
+
+    <hr>
+{% endfor %}
+
+{% endif %}
+
+<div class="d-flex justify-content-center mt-4">
+    <a href="/" class="btn btn-lg btn-outline-primary px-4">⬅ Volver al menú</a>
+</div>
+
+{% endblock %}

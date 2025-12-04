@@ -1,0 +1,22 @@
+
+<!DOCTYPE html>
+
+{% extends "layout.html" %}
+{% block content %}
+
+<html>
+<head>
+    <title>Resultado</title>
+</head>
+<body>
+    <h1>Resultado del cálculo</h1>
+
+    <p>Aparato: <strong>{{ aparato }}</strong></p>
+    <p>Consumo: <strong>{{ consumo }} kWh</strong></p>
+    <p>Costo total: <strong>${{ costo }}</strong></p>
+
+    <a href="/calcular">Calcular otro</a>
+</body>
+</html>
+
+{% endblock %}

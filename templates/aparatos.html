@@ -1,0 +1,224 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<style>
+    /* FONDO GENERAL */
+    body {
+        background: #121212 !important;
+        color: #ffffff !important;
+    }
+
+    /* TARJETAS */
+    .card {
+        background: #1E1E1E !important;
+        color: #fff;
+        border-radius: 14px;
+        border: 1px solid #2a2a2a;
+    }
+
+    /* TEXTOS */
+    label, h2, h4, h5, h6 {
+        color: #ffffff !important;
+    }
+
+    /* INPUTS Y SELECT */
+    .form-control {
+        background: #2b2b2b !important;
+        border: 1px solid #444 !important;
+        color: #fff !important;
+    }
+    .form-control:focus {
+        background: #2b2b2b !important;
+        color: #fff !important;
+        border-color: #0d6efd !important;
+        box-shadow: none !important;
+    }
+
+    /* BOTÓN PRINCIPAL */
+    .btn-primary {
+        background: #0d6efd !important;
+        border: none !important;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    .btn-primary:hover {
+        background: #0b5ed7 !important;
+    }
+
+    /* BOTÓN ELIMINAR */
+    .btn-danger {
+        border: none !important;
+        background: #d00000 !important;
+        border-radius: 8px !important;
+    }
+    .btn-danger:hover {
+        background: #b00000 !important;
+    }
+
+    /* --- TABLAS COMPLETAMENTE OSCURAS --- */
+    table.table, .table {
+        background: #1a1a1a !important;
+        color: #ffffff !important;
+        border-color: #333 !important;
+    }
+
+    thead {
+        background: #0d0d0d !important;
+        color: #ffffff !important;
+    }
+
+    th {
+        background: #0d0d0d !important;
+        color: #ffffff !important;
+        border-color: #333 !important;
+    }
+
+    td {
+        background: #1a1a1a !important;
+        color: #ffffff !important;
+        border-color: #333 !important;
+    }
+
+    /* FILAS */
+    tbody tr {
+        background: #1a1a1a !important;
+        border-bottom: 1px solid #333 !important;
+    }
+
+    /* RAYADO TIPO STRIPED (oscuro, sin blancos) */
+    .table-striped tbody tr:nth-of-type(odd) {
+        background: #202020 !important;
+    }
+    .table-striped tbody tr:nth-of-type(even) {
+        background: #181818 !important;
+    }
+
+    /* HOVER */
+    tbody tr:hover {
+        background: #2b2b2b !important;
+        cursor: pointer;
+    }
+</style>
+
+
+<div class="container mt-4">
+
+    <h2 class="mb-4 text-center">Gestión de Electrodomésticos</h2>
+
+    <!-- FORMULARIO -->
+    <div class="card shadow p-4 mb-4">
+        <h4 class="mb-3">Agregar Electrodoméstico</h4>
+
+        <form method="POST">
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+                    <label>Usuario</label>
+                    <select name="id_usuario" class="form-control" required>
+                        <option value="">Seleccione</option>
+                        {% for u in usuarios %}
+                        <option value="{{ u[0] }}">{{ u[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label>Nombre del aparato</label>
+                    <input type="text" name="nombre" class="form-control" required>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label>Potencia (W)</label>
+                    <input type="number" name="potencia" class="form-control" required>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label>Horas de uso</label>
+                    <input type="number" name="horas" class="form-control" required>
+                </div>
+
+            </div>
+
+            <button class="btn btn-primary w-100 mt-3">Agregar</button>
+        </form>
+    </div>
+
+    <!-- TABLA -->
+    <div class="card shadow p-4">
+        <h4 class="mb-3">Electrodomésticos Registrados</h4>
+
+        <table class="table table-hover table-striped">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Aparato</th>
+                    <th>Potencia (W)</th>
+                    <th>Horas</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for a in lista_aparatos %}
+                <tr>
+                    <td>{{ a[4] }}</td>
+                    <td>{{ a[1] }}</td>
+                    <td>{{ a[2] }}</td>
+                    <td>{{ a[3] }}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm"
+                                onclick="eliminarAparato({{ a[0] }})">
+                            🗑 Eliminar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
+
+<!-- JS SWEETALERT -->
+<script>
+function eliminarAparato(id) {
+    Swal.fire({
+        title: "¿Eliminar aparato?",
+        text: "Esta acción no se puede deshacer",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+        background: "#1E1E1E",
+        color: "#fff"
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+            fetch(`/eliminar_aparato/${id}`, {
+                method: "POST"
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success){
+                    Swal.fire({
+                        icon: "success",
+                        title: "Eliminado",
+                        text: "El aparato fue eliminado correctamente",
+                        background: "#1E1E1E",
+                        color: "#fff",
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                }
+            });
+        }
+    });
+}
+</script>
+
+{% endblock %}
