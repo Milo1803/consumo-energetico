@@ -6,11 +6,12 @@ def conectar():
         connection = mysql.connector.connect(
             host=os.getenv("DB_HOST"),
             user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASS"),
+            password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_NAME"),
-            port=os.getenv("DB_PORT", 3306)
+            port=int(os.getenv("DB_PORT", 3306))
         )
         return connection
     except Exception as e:
         print("Error al conectar:", e)
         return None
+
