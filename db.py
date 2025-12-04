@@ -10,8 +10,8 @@ def conectar():
             database=os.getenv("DB_NAME"),
             port=int(os.getenv("DB_PORT", 3306))
         )
+        print("✔ Conexión a MySQL exitosa")
         return connection
     except Exception as e:
-        print("Error al conectar:", e)
+        print("❌ Error al conectar a MySQL:", e)
         return None
-
