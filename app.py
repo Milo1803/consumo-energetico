@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from flask_mysqldb import MySQL 
-from db import conectar
+from config import conectar
 
 app = Flask(__name__)
 
@@ -24,11 +23,11 @@ def usuarios():
         nombre = request.form["nombre"]
         tarifa = request.form["tarifa"]
 
-        sql = "INSERT INTO usuarios(nombre, tipo_tarifa) VALUES (%s, %s)"
-        cursor.execute(sql, (nombre, tarifa))
+        cursor.execute("INSERT INTO usuarios(nombre, tipo_tarifa) VALUES (%s, %s)",
+                       (nombre, tarifa))
         db.commit()
 
-    cursor.execute("SELECT nombre, tipo_tarifa FROM usuarios")
+    cursor.execute("SELECT id_usuario, nombre, tipo_tarifa FROM usuarios")
     usuarios = cursor.fetchall()
 
     cursor.close()
@@ -36,24 +35,19 @@ def usuarios():
 
     return render_template("usuarios.html", usuarios=usuarios)
 
-    
 
 @app.route("/eliminar_usuario", methods=["POST"])
 def eliminar_usuario():
-    nombre = request.form["nombre"]
+    id_usuario = request.form["id_usuario"]
 
     db = conectar()
     cursor = db.cursor()
-
-    sql = "DELETE FROM usuarios WHERE nombre = %s"
-    cursor.execute(sql, (nombre,))
+    cursor.execute("DELETE FROM usuarios WHERE id_usuario = %s", (id_usuario,))
     db.commit()
-
     cursor.close()
     db.close()
 
     return redirect("/usuarios")
-
 
 
 # ------------------------------
@@ -86,9 +80,9 @@ def aparatos():
             VALUES (%s, %s, %s, %s)
         """, (id_usuario, nombre, potencia, horas))
         db.commit()
+
         cursor.close()
         db.close()
-
         return render_template("aparato_exito.html", nombre=nombre)
 
     cursor.close()
@@ -106,6 +100,7 @@ def eliminar_aparato(id_aparato):
     db.close()
     return jsonify({"success": True})
 
+
 # ------------------------------
 #   CÁLCULO GENERAL
 # ------------------------------
@@ -120,7 +115,7 @@ def calcular():
             a.potencia_w, 
             a.horas_uso, 
             t.precio_kwh,
-            u.nombre  -- Nombre del usuario dueño del aparato
+            u.nombre
         FROM aparatos a
         JOIN usuarios u ON a.id_usuario = u.id_usuario
         JOIN tarifas t ON t.tipo_tarifa = u.tipo_tarifa
@@ -136,7 +131,6 @@ def calcular():
     consumo_total = 0
     costo_total = 0
 
-    # datos = [nombre_aparato, potencia_w, horas_uso, precio_kwh, usuario]
     for aparato in datos:
         nombre, potencia, horas, precio_kwh, usuario = aparato
         consumo = (potencia / 1000) * horas * 30
@@ -153,10 +147,8 @@ def calcular():
     )
 
 
-
-
 # ------------------------------
-#   CÁLCULO INDIVIDUAL POR USUARIO
+#   CÁLCULO POR USUARIO
 # ------------------------------
 @app.route("/calcular_usuario", methods=["GET", "POST"])
 def calcular_usuario():
@@ -178,6 +170,7 @@ def calcular_usuario():
             JOIN tarifas t ON t.tipo_tarifa = u.tipo_tarifa
             WHERE a.id_usuario = %s
         """, (id_usuario,))
+
         aparatos = cursor.fetchall()
 
         aparatos_resultado = []
@@ -186,7 +179,6 @@ def calcular_usuario():
         costo_total_dia = 0
         costo_total_mes = 0
 
-        # 🔵 LISTAS PARA LAS GRÁFICAS
         labels = []
         valores_kwh_mes = []
         valores_costo_mes = []
@@ -194,7 +186,6 @@ def calcular_usuario():
         for nombre, potencia, horas, precio_kwh in aparatos:
             consumo_dia = (potencia / 1000) * horas
             consumo_mes = consumo_dia * 30
-
             costo_dia = consumo_dia * precio_kwh
             costo_mes = consumo_mes * precio_kwh
 
@@ -203,7 +194,6 @@ def calcular_usuario():
             costo_total_dia += costo_dia
             costo_total_mes += costo_mes
 
-            # Guardar fila para tabla
             aparatos_resultado.append({
                 "nombre": nombre,
                 "potencia": potencia,
@@ -214,7 +204,6 @@ def calcular_usuario():
                 "costo_mes": round(costo_mes)
             })
 
-            # Guardar datos para las gráficas
             labels.append(nombre)
             valores_kwh_mes.append(round(consumo_mes, 3))
             valores_costo_mes.append(round(costo_mes))
@@ -230,8 +219,6 @@ def calcular_usuario():
             "consumo_total_mes": round(consumo_total_mes, 3),
             "costo_total_dia": round(costo_total_dia),
             "costo_total_mes": round(costo_total_mes),
-
-            # 🔵 DATOS ENVIADOS A LAS GRÁFICAS
             "labels": labels,
             "valores_kwh_mes": valores_kwh_mes,
             "valores_costo_mes": valores_costo_mes
@@ -243,10 +230,8 @@ def calcular_usuario():
     return render_template("calcular_usuario.html", usuarios=usuarios, resultados=resultados)
 
 
-
-
 # ------------------------------
-#   REPORTE MENSUAL POR USUARIO
+#   REPORTE MENSUAL
 # ------------------------------
 @app.route("/reporte", methods=["GET", "POST"])
 def reporte():
@@ -268,6 +253,7 @@ def reporte():
             JOIN tarifas t ON t.tipo_tarifa = u.tipo_tarifa
             WHERE a.id_usuario = %s
         """, (id_usuario,))
+
         aparatos = cursor.fetchall()
 
         reporte_aparatos = []
@@ -275,7 +261,7 @@ def reporte():
         costo_total = 0
 
         for nombre, potencia, horas, precio_kwh in aparatos:
-            consumo = (potencia / 1000) * horas * 30   # mensual
+            consumo = (potencia / 1000) * horas * 30
             costo = consumo * precio_kwh
 
             consumo_total += consumo
@@ -304,68 +290,9 @@ def reporte():
 
     return render_template("reporte.html", usuarios=usuarios, datos=datos)
 
-@app.route("/historial_consumo", methods=["GET", "POST"])
-def historial_consumo():
-    db = conectar()
-    cursor = db.cursor()
-
-    # Cargar usuarios para el menú desplegable
-    cursor.execute("SELECT id_usuario, nombre FROM usuarios")
-    usuarios = cursor.fetchall()
-
-    datos = None
-
-    if request.method == "POST":
-        id_usuario = request.form["id_usuario"]
-        
-        cursor.execute("""
-            SELECT cm.mes, a.nombre_aparato, cm.horas_uso, cm.consumo_kwh, cm.costo, cm.fecha_registro
-            FROM consumo_mensual cm
-            JOIN aparatos a ON cm.id_aparato = a.id_aparato
-            WHERE a.id_usuario = %s 
-            ORDER BY cm.mes ASC
-        """, (id_usuario,))
-        
-        registros = cursor.fetchall()
-
-        # Nombre del usuario
-        cursor.execute("SELECT nombre FROM usuarios WHERE id_usuario = %s", (id_usuario,))
-        nombre_usuario = cursor.fetchone()[0]
-
-        # Organizar por meses
-        meses = {}
-        for mes, aparato, horas, consumo, costo, fecha in registros:
-            if mes not in meses:
-                meses[mes] = {
-                    "aparatos": [],
-                    "total_consumo": 0,
-                    "total_costo": 0
-                }
-
-            meses[mes]["aparatos"].append({
-                "aparato": aparato,
-                "horas": horas,
-                "consumo": consumo,
-                "costo": costo
-            })
-
-            meses[mes]["total_consumo"] += consumo
-            meses[mes]["total_costo"] += costo
-
-        datos = {
-            "usuario": nombre_usuario,
-            "meses": meses
-        }
-
-    cursor.close()
-    db.close()
-
-    return render_template("historial_consumo.html", usuarios=usuarios, datos=datos)
-
-
 
 # ------------------------------
-#   INICIO DEL SERVIDOR
+#   SERVIDOR
 # ------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
